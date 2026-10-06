@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>해외 축구 정보</title>
+<style>
+:root{
+--bg:#f5f6f8;--card:#fff;--text:#14151a;--sub:#6b7280;--line:#e5e7eb;
+--accent:#1d4ed8;--accent-bg:#eef2ff;--win:#16a34a;--warn:#dc2626;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+:root:not([data-theme="light"]){--bg:#0f1115;--card:#181b21;--text:#eef0f3;--sub:#9aa1ad;--line:#2a2e37;--accent:#7c9cff;--accent-bg:#1c2440;}
+}
+:root[data-theme="dark"]{--bg:#0f1115;--card:#181b21;--text:#eef0f3;--sub:#9aa1ad;--line:#2a2e37;--accent:#7c9cff;--accent-bg:#1c2440;}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Pretendard","Apple SD Gothic Neo",sans-serif;}
+header{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line);padding:calc(12px + env(safe-area-inset-top,0px)) 14px 0;}
+h1{font-size:18px;margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;}
+.starbtn{font-size:13px;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:8px;padding:5px 9px;cursor:pointer;}
+.lg-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;}
+.lg-tab{flex:0 0 auto;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:12.5px;cursor:pointer;color:var(--text);white-space:nowrap;}
+.lg-tab.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.sub-tabs{display:flex;gap:0;border-top:1px solid var(--line);}
+.sub-tab{flex:1;text-align:center;padding:10px 0;font-size:14px;font-weight:600;color:var(--sub);cursor:pointer;border-bottom:2px solid transparent;}
+.sub-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+main{max-width:720px;margin:0 auto;padding:10px 14px 40px;}
+
+.date-scroller{display:flex;gap:6px;overflow-x:auto;padding:6px 2px 14px;}
+.date-chip{flex:0 0 auto;padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card);font-size:12px;text-align:center;cursor:pointer;color:var(--text);}
+.date-chip .dow{display:block;color:var(--sub);font-size:10px;}
+.date-chip.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.date-chip.active .dow{color:#dbe4ff;}
+
+.pin-box{background:var(--accent-bg);border:1px solid var(--accent);border-radius:12px;padding:10px 12px;margin-bottom:14px;}
+.pin-box .lbl{font-size:11px;color:var(--accent);font-weight:700;margin-bottom:6px;}
+
+.match{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:8px;overflow:hidden;}
+.match-head{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;}
+.match-head .time{width:50px;flex:0 0 50px;font-size:11px;color:var(--sub);}
+.match-head .time b{display:block;font-size:13px;color:var(--text);}
+.match-head .time .st{display:block;margin-top:2px;font-size:10px;}
+.match-head .time .st.live{color:var(--warn);}
+.teams{flex:1;min-width:0;}
+.trow{display:flex;align-items:center;gap:8px;padding:2px 0;}
+.badge{width:22px;height:22px;border-radius:50%;flex:0 0 22px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;}
+.tname{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
+.tname.fav{font-weight:700;}
+.tname.fav:after{content:" ★";color:#f5a623;}
+.tscore{font-size:14px;font-weight:700;min-width:18px;text-align:right;}
+.win .tname{font-weight:700;}
+
+.pred{font-size:11px;color:var(--sub);text-align:right;flex:0 0 56px;line-height:1.4;}
+.pred b{color:var(--accent);display:block;}
+
+.detail{border-top:1px solid var(--line);padding:12px 14px 14px;font-size:13px;display:none;}
+.detail.open{display:block;}
+.detail .sum{color:var(--text);line-height:1.6;margin-bottom:12px;}
+.statrow{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px;}
+.statrow .v{width:34px;text-align:center;font-weight:700;}
+.bar{flex:1;height:6px;background:var(--line);border-radius:4px;overflow:hidden;display:flex;}
+.bar .a{background:var(--accent);height:100%;}
+.bar .b{background:var(--sub);opacity:.4;height:100%;}
+.stat-label{text-align:center;font-size:11px;color:var(--sub);width:70px;flex:0 0 70px;}
+.lineups{display:flex;gap:14px;margin-top:12px;}
+.lu-col{flex:1;min-width:0;}
+.lu-col h4{font-size:12px;margin:0 0 6px;color:var(--sub);}
+.lu-col ul{margin:0;padding:0;list-style:none;font-size:12px;line-height:1.9;}
+.lu-col li span{color:var(--sub);font-size:10px;}
+.empty-note{color:var(--sub);font-size:12px;padding:6px 0;}
+
+.standings{width:100%;border-collapse:collapse;font-size:13px;}
+.standings th{font-size:11px;color:var(--sub);font-weight:600;padding:6px 4px;text-align:center;border-bottom:1px solid var(--line);}
+.standings td{padding:8px 4px;text-align:center;border-bottom:1px solid var(--line);}
+.standings td.rank{width:22px;color:var(--sub);}
+.standings td.team{text-align:left;display:flex;align-items:center;gap:6px;}
+.standings tr.fav-row{background:var(--accent-bg);}
+
+.picker-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:flex-end;z-index:50;}
+.picker-overlay.open{display:flex;}
+.picker{background:var(--card);width:100%;max-height:70vh;overflow-y:auto;border-radius:16px 16px 0 0;padding:16px;}
+.picker h3{margin:0 0 10px;font-size:15px;}
+.picker select{width:100%;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:14px;margin-bottom:10px;}
+.picker button{width:100%;padding:10px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:14px;cursor:pointer;}
+footer{text-align:center;color:var(--sub);font-size:11px;padding:10px 16px 30px;}
+</style>
+</head>
+<body>
+<header>
+<h1>⚽ 해외 축구 정보 <button class="starbtn" id="favBtn">★ 응원팀</button></h1>
+<div class="lg-tabs" id="lgTabs"></div>
+<div class="sub-tabs">
+<div class="sub-tab active" data-sub="sched">일정</div>
+<div class="sub-tab" data-sub="stand">순위</div>
+</div>
+</header>
+<main id="main"></main>
+<footer>경기 정보는 스냅샷 데이터이며(기준 2026-09-22), 일부 경기만 상세 기록을 제공합니다. 일정·라인업은 변경될 수 있습니다.</footer>
+
+<div class="picker-overlay" id="pickerOv">
+<div class="picker">
+<h3>응원하는 팀을 선택하세요</h3>
+<select id="favSelect"></select>
+<button id="favSave">저장</button>
+</div>
+</div>
+
+<script>
+const DOW=['일','월','화','수','목','금','토'];
+function dlabel(d){const dt=new Date(d+'T00:00:00');const [y,m,day]=d.split('-');return {mmdd:`${+m}/${+day}`, dow:DOW[dt.getDay()]};}
+
+const NAME_KR={
+"Manchester City":"맨체스터 시티","Arsenal FC":"아스널","Brighton & Hove Albion":"브라이턴","Brentford FC":"브렌트포드","Leeds United":"리즈 유나이티드","Liverpool FC":"리버풀","Everton FC":"에버턴","Hull City":"헐 시티","Newcastle United":"뉴캐슬 유나이티드","Chelsea FC":"첼시","Ipswich Town":"입스위치 타운","Manchester United":"맨체스터 유나이티드","Nottingham Forest":"노팅엄 포레스트","Sunderland AFC":"선더랜드","Crystal Palace":"크리스탈 팰리스","Aston Villa":"아스톤 빌라","AFC Bournemouth":"AFC 본머스","Coventry City":"코번트리 시티","Fulham FC":"풀럼","Tottenham Hotspur":"토트넘 홋스퍼",
+"FC Barcelona":"FC 바르셀로나","Atletico Madrid":"아틀레티코 마드리드","Real Betis Seville":"레알 베티스","Real Madrid":"레알 마드리드","Sevilla FC":"세비야","Deportivo Alaves":"데포르티보 알라베스","RC Deportivo de A Coruna":"데포르티보 라코루냐","Real Sociedad San Sebastian":"레알 소시에다드","Villarreal CF":"비야레알","Athletic Bilbao":"아틀레틱 빌바오","Getafe CF":"헤타페","Rayo Vallecano":"라요 바예카노","CA Osasuna":"오사수나","RC Celta de Vigo":"셀타 비고","Espanyol Barcelona":"에스파뇰","Racing Santander":"라싱 산탄데르","Levante UD":"레반테","Elche CF":"엘체","Valencia CF":"발렌시아","Malaga CF":"말라가",
+"AS Roma":"AS 로마","Inter Milano":"인터 밀란","Lazio Rome":"라치오","Cagliari Calcio":"칼리아리","AC Milan":"AC 밀란","Frosinone Calcio":"프로시노네","Juventus Turin":"유벤투스","Como 1907":"코모","SSC Napoli":"나폴리","Sassuolo Calcio":"사수올로","Atalanta BC":"아탈란타","US Lecce":"레체","Udinese Calcio":"우디네세","Torino FC":"토리노","Parma Calcio":"파르마","AC Monza":"몬차","ACF Fiorentina":"피오렌티나","Bologna FC":"볼로냐","Genoa CFC":"제노아","Venezia FC":"베네치아",
+"Borussia Dortmund":"보루시아 도르트문트","Bayern Munich":"바이에른 뮌헨","SC Freiburg":"SC 프라이부르크","FC Augsburg":"FC 아우크스부르크","Bayer Leverkusen":"바이어 레버쿠젠","FSV Mainz":"마인츠 05","SV 07 Elversberg":"SV 엘버스베르크","Werder Bremen":"베르더 브레멘","RB Leipzig":"RB 라이프치히","Eintracht Frankfurt":"아인트라흐트 프랑크푸르트","Schalke 04":"샬케 04","SC Paderborn 07":"SC 파더보른","1. FC Cologne":"쾰른","TSG Hoffenheim":"TSG 호펜하임","VfB Stuttgart":"VfB 슈투트가르트","Hamburger SV":"함부르크 SV","Union Berlin":"우니온 베를린","Borussia Monchengladbach":"보루시아 묀헨글라트바흐",
+"AS Monaco":"AS 모나코","Olympique Lyon":"올랭피크 리옹","Paris FC":"파리 FC","Lille OSC":"릴 OSC","Stade Rennais FC":"스타드 렌","Paris Saint-Germain":"파리 생제르맹","Angers SCO":"앙제","Strasbourg Alsace":"스트라스부르","Le Mans FC":"르망 FC","AJ Auxerre":"AJ 오세르","Stade Brest 29":"스타드 브레스트","FC Lorient":"FC 로리앙","Toulouse FC":"툴루즈","OGC Nice":"OGC 니스","Racing Club De Lens":"랑스","ESTAC Troyes":"트루아","Olympique Marseille":"올랭피크 마르세유","Le Havre AC":"르아브르",
+"Sporting CP":"스포르팅 CP","Galatasaray Istanbul":"갈라타사라이","Fenerbahce Istanbul":"페네르바흐체","Slavia Prague":"슬라비아 프라하","FC Shakhtar Donetsk":"샤흐타르 도네츠크","PSV Eindhoven":"PSV 에인트호번","Bodoe/Glimt":"보되글림트","Sabah Masazir":"사바흐 마사자르","Club Brugge":"클럽 브뤼헤","Viking FK":"비킹 FK","Feyenoord Rotterdam":"페예노르트","AEK Athens":"AEK 아테네","LASK Linz":"LASK 린츠","FC Porto":"FC 포르투","SK Slovan Bratislava":"슬로반 브라티슬라바"
+};
+function kr(n){return NAME_KR[n]||n;}
+function abbr(n){return n.replace(/[^A-Za-z0-9]/g,'').slice(0,3).toUpperCase()||n.slice(0,2);}
+const PALETTE=['#e11d48','#2563eb','#16a34a','#d97706','#7c3aed','#0891b2','#be123c','#4d7c0f','#0f766e','#9333ea'];
+function color(n){let h=0;for(const c of n)h=(h*31+c.charCodeAt(0))>>>0;return PALETTE[h%PALETTE.length];}
+
+const DETAILS={
+"bri_ars":{
+sum:"브라이턴이 전반 31분과 45분 연속골, 후반 12분 쐐기골로 아스날을 3-0으로 완파했다. 아스날은 볼 점유율 57%로 앞섰지만 슈팅 6개 중 유효슈팅은 1개에 그쳤다. 브라이턴은 옐로카드 4장을 받으며 다소 거친 경기 운영을 보였다.",
+st:{h:{pos:43,shots:14,sot:5,corn:5,yc:4},a:{pos:57,shots:6,sot:1,corn:6,yc:1}},
+lu:{h:["Verbruggen, Bart(GK)","Kadioglu, Ferdi(DF)","Vuskovic, Luka(DF)","Struijk, Pascal(DF)","Boscagli, Olivier(DF)","Chema Andres(MF)","Ayari, Yasin(MF)","Gomez, Diego(MF)","Gross, Pascal(MF)","De Cuyper, Maxim(DF)","Kostoulas, Charalampos(FW)"],
+a:["Raya, David(GK)","Timber, Jurrien(DF)","Konsa, Ezri(DF)","Magalhaes, Gabriel(DF)","Calafiori, Riccardo(DF)","Rice, Declan(MF)","Guimaraes, Bruno(MF)","Saka, Bukayo(FW)","Odegaard, Martin(MF)","Tzolis, Christos(FW)","Havertz, Kai(FW)"]}
+},
+"mci_sun":{
+sum:"맨체스터 시티가 5골을 몰아치며 선더랜드를 5-3으로 제압했다. 양 팀 모두 슈팅 15개, 유효슈팅 6개로 동일한 공격 지표를 기록했으며, 맨시티는 점유율 57%로 경기를 주도했다. 후반 82분 추가골이 승부를 결정지었다.",
+st:{h:{pos:57,shots:15,sot:6,corn:6,yc:0},a:{pos:43,shots:15,sot:6,corn:5,yc:1}},
+lu:{h:["Donnarumma, Gianluigi(GK)","Nunes, Matheus(MF)","Dias, Ruben(DF)","Guehi, Marc(DF)","Gvardiol, Josko(DF)","Fernandez, Enzo(MF)","Anderson, Elliot(MF)","Semenyo, Antoine(MF)","Cherki, Rayan(MF)","Ndiaye, Iliman(FW)","Haaland, Erling(FW)"],
+a:["Roefs, Robin(GK)","Mukiele, Nordi(DF)","Danso, Kevin(DF)","Ballard, Daniel(DF)","Methalie, Dayann(DF)","Xhaka, Granit(MF)","Sadiki, Noah(MF)","Meunier, Thomas(DF)","Le Fee, Enzo(MF)","Angulo, Nilson(FW)","Brobbey, Brian(FW)"]}
+},
+"atm_rma":{
+sum:"아틀레티코 마드리드가 마드리드 더비에서 레알 마드리드를 2-1로 꺾었다. 후반 52분 레알 마드리드가 퇴장을 당해 수적 열세에 몰렸고, 아틀레티코는 곧바로 53분·59분 연속골로 승기를 잡았다. 레알은 89분 만회골을 넣었지만 역전에는 실패했다. 아틀레티코는 점유율 65%로 경기를 지배했다.",
+st:{h:{pos:65,shots:12,sot:7,corn:3,yc:2},a:{pos:35,shots:6,sot:3,corn:1,yc:2}},
+lu:{h:["Oblak, Jan(GK)","Llorente, Marcos(DF)","Pubill, Marc(DF)","Romero, Cristian(DF)","Hancko, David(DF)","Simeone, Giuliano(FW)","Baena, Alex(MF)","Cardoso, Johnny(MF)","Grimaldo, Alex(DF)","Kang-in, Lee(MF)","David, Jonathan(FW)"],
+a:["Courtois, Thibaut(GK)","Dumfries, Denzel(DF)","Konate, Ibrahima(DF)","Huijsen, Dean(DF)","Cucurella, Marc(DF)","Valverde, Federico(MF)","Tchouameni, Aurelien(MF)","Guler, Arda(FW)","Bellingham, Jude(MF)","Vinicius Junior(FW)","Mbappe, Kylian(FW)"]}
+}
+};
+
+function M(d,t,h,a,st,hs,as,hp,dp,ap,det){return {d,t,h,a,st,hs,as,hp,dp,ap,det};}
+const LEAGUES={
+epl:{label:"프리미어리그",
+matches:[
+M("2026-09-19","04:00","Brentford FC","Chelsea FC","final",3,0),
+M("2026-09-19","20:30","Tottenham Hotspur","Aston Villa","final",2,3),
+M("2026-09-19","23:00","Brighton & Hove Albion","Arsenal FC","final",3,0,null,null,null,"bri_ars"),
+M("2026-09-19","23:00","Everton FC","Ipswich Town","final",1,0),
+M("2026-09-19","23:00","Newcastle United","Hull City","final",2,1),
+M("2026-09-20","01:30","Nottingham Forest","Coventry City","final",0,1),
+M("2026-09-20","22:00","AFC Bournemouth","Liverpool FC","final",0,1),
+M("2026-09-20","22:00","Leeds United","Crystal Palace","final",0,0),
+M("2026-09-20","22:00","Manchester City","Sunderland AFC","final",5,3,null,null,null,"mci_sun"),
+M("2026-09-21","00:30","Fulham FC","Manchester United","final",1,1),
+M("2026-10-10","20:30","Arsenal FC","Leeds United","sched",null,null,70.1,18.3,11.6),
+M("2026-10-10","23:00","Aston Villa","Brentford FC","sched",null,null,35.5,27,37.5),
+M("2026-10-10","23:00","Chelsea FC","AFC Bournemouth","sched",null,null,53.5,22.7,23.8),
+M("2026-10-10","23:00","Ipswich Town","Fulham FC","sched",null,null,35.5,26.9,37.6),
+M("2026-10-10","23:00","Sunderland AFC","Brighton & Hove Albion","sched",null,null,33.8,27.6,38.6),
+M("2026-10-11","01:30","Manchester United","Tottenham Hotspur","sched",null,null,55.9,22.7,21.4),
+M("2026-10-11","22:00","Crystal Palace","Nottingham Forest","sched",null,null,35.4,28.8,35.8),
+M("2026-10-11","22:00","Hull City","Everton FC","sched",null,null,26.6,28,45.4),
+M("2026-10-12","00:30","Liverpool FC","Manchester City","sched",null,null,33.8,25.8,40.4),
+M("2026-10-13","04:00","Coventry City","Newcastle United","sched",null,null,28.7,26.3,45)
+],
+standings:[["Manchester City",5,0,0,15],["Arsenal FC",4,1,0,12],["Brighton & Hove Albion",3,1,1,10],["Brentford FC",2,0,3,9],["Leeds United",2,0,3,9],["Liverpool FC",2,0,3,9],["Everton FC",2,0,3,9],["Hull City",2,1,2,8],["Newcastle United",2,1,2,8],["Chelsea FC",2,2,1,7],["Ipswich Town",2,3,0,6],["Manchester United",1,2,2,5],["Nottingham Forest",1,2,2,5],["Sunderland AFC",1,3,1,4],["Crystal Palace",1,3,1,4],["Aston Villa",1,3,1,4],["AFC Bournemouth",0,2,3,3],["Coventry City",1,4,0,3],["Fulham FC",0,3,2,2],["Tottenham Hotspur",0,3,2,2]]
+},
+laliga:{label:"라리가",
+matches:[
+M("2026-09-19","04:00","Espanyol Barcelona","Elche CF","final",1,3),
+M("2026-09-19","21:00","CA Osasuna","Rayo Vallecano","final",1,1),
+M("2026-09-19","23:15","Athletic Bilbao","Deportivo Alaves","final",0,0),
+M("2026-09-20","01:30","RC Celta de Vigo","Racing Santander","final",5,0),
+M("2026-09-20","04:00","Sevilla FC","FC Barcelona","final",1,3),
+M("2026-09-20","21:00","Getafe CF","Malaga CF","final",1,0),
+M("2026-09-20","23:15","Atletico Madrid","Real Madrid","final",2,1,null,null,null,"atm_rma"),
+M("2026-09-21","01:30","RC Deportivo de A Coruna","Real Betis Seville","final",1,1),
+M("2026-09-21","01:30","Villarreal CF","Levante UD","final",3,1),
+M("2026-09-21","04:00","Valencia CF","Real Sociedad San Sebastian","final",2,3),
+M("2026-10-10","04:00","Malaga CF","Espanyol Barcelona","sched",null,null,35.9,29.3,34.8),
+M("2026-10-10","21:00","Rayo Vallecano","Athletic Bilbao","sched",null,null,31.3,27.5,41.2),
+M("2026-10-10","23:15","Deportivo Alaves","Atletico Madrid","sched",null,null,24.7,26.2,49.1),
+M("2026-10-11","01:30","FC Barcelona","Getafe CF","sched",null,null,91.9,5.8,2.3),
+M("2026-10-11","04:00","Real Madrid","Villarreal CF","sched",null,null,76,13.5,10.5),
+M("2026-10-11","21:00","Elche CF","RC Celta de Vigo","sched",null,null,32.8,29,38.2),
+M("2026-10-11","23:15","Real Sociedad San Sebastian","RC Deportivo de A Coruna","sched",null,null,53.7,25,21.3),
+M("2026-10-12","01:30","Real Betis Seville","CA Osasuna","sched",null,null,56.1,23.7,20.2),
+M("2026-10-12","04:00","Racing Santander","Valencia CF","sched",null,null,46.2,26.6,27.2),
+M("2026-10-13","04:00","Levante UD","Sevilla FC","sched",null,null,35.7,29,35.3)
+],
+standings:[["FC Barcelona",7,0,0,21],["Atletico Madrid",5,1,1,16],["Real Betis Seville",5,1,1,16],["Real Madrid",5,2,0,15],["Sevilla FC",4,2,1,13],["Deportivo Alaves",3,2,2,11],["RC Deportivo de A Coruna",2,1,4,10],["Real Sociedad San Sebastian",3,3,1,10],["Villarreal CF",2,3,2,8],["Athletic Bilbao",2,2,2,8],["Getafe CF",2,3,2,8],["Rayo Vallecano",2,3,2,8],["CA Osasuna",2,3,2,8],["RC Celta de Vigo",1,2,4,7],["Espanyol Barcelona",2,4,1,7],["Racing Santander",2,4,1,7],["Levante UD",1,3,2,5],["Elche CF",1,4,2,5],["Valencia CF",1,5,1,4],["Malaga CF",0,4,3,3]]
+},
+seriea:{label:"세리에 A",
+matches:[
+M("2026-09-19","03:45","AC Monza","Sassuolo Calcio","final",2,1),
+M("2026-09-19","22:00","Bologna FC","Torino FC","final",1,1),
+M("2026-09-19","22:00","Udinese Calcio","Cagliari Calcio","final",0,1),
+M("2026-09-20","01:00","AS Roma","Inter Milano","final",2,2),
+M("2026-09-20","03:45","Venezia FC","Lazio Rome","final",0,2),
+M("2026-09-20","19:30","ACF Fiorentina","SSC Napoli","final",1,1),
+M("2026-09-20","22:00","Frosinone Calcio","Como 1907","final",2,0),
+M("2026-09-20","22:00","Parma Calcio","Genoa CFC","final",2,1),
+M("2026-09-21","01:00","Juventus Turin","Atalanta BC","final",2,0),
+M("2026-09-21","03:45","AC Milan","US Lecce","final",3,0),
+M("2026-10-10","22:00","Genoa CFC","ACF Fiorentina","sched",null,null,30.5,28.3,41.2),
+M("2026-10-11","01:00","Inter Milano","Parma Calcio","sched",null,null,86.6,9,4.4),
+M("2026-10-11","03:45","SSC Napoli","Frosinone Calcio","sched",null,null,64.8,19.8,15.4),
+M("2026-10-11","19:30","Como 1907","AS Roma","sched",null,null,36.9,26.7,36.4),
+M("2026-10-11","22:00","Lazio Rome","AC Monza","sched",null,null,56.1,25.2,18.7),
+M("2026-10-11","22:00","US Lecce","Bologna FC","sched",null,null,24.9,27.9,47.2),
+M("2026-10-12","01:00","Sassuolo Calcio","AC Milan","sched",null,null,22.3,25.3,52.4),
+M("2026-10-12","03:45","Cagliari Calcio","Juventus Turin","sched",null,null,15.4,23.6,61),
+M("2026-10-13","01:30","Atalanta BC","Venezia FC","sched",null,null,58,22.8,19.2),
+M("2026-10-13","03:45","Torino FC","Udinese Calcio","sched",null,null,41.5,28.6,29.9)
+],
+standings:[["AS Roma",4,0,1,13],["Inter Milano",4,0,1,13],["Lazio Rome",4,0,1,13],["Cagliari Calcio",4,1,0,12],["AC Milan",3,0,2,11],["Frosinone Calcio",3,1,1,10],["Juventus Turin",3,1,1,10],["Como 1907",3,1,1,10],["SSC Napoli",2,2,1,7],["Sassuolo Calcio",2,2,1,7],["Atalanta BC",2,3,0,6],["US Lecce",2,3,0,6],["Udinese Calcio",1,3,1,4],["Torino FC",1,3,1,4],["Parma Calcio",1,3,1,4],["AC Monza",1,3,1,4],["ACF Fiorentina",1,3,1,4],["Bologna FC",0,3,2,2],["Genoa CFC",0,4,1,1],["Venezia FC",0,5,0,0]]
+},
+bundesliga:{label:"분데스리가",
+matches:[
+M("2026-09-14","00:30","SV 07 Elversberg","Bayern Munich","final",1,2),
+M("2026-09-19","03:30","Bayern Munich","Union Berlin","final",7,0),
+M("2026-09-19","22:30","Eintracht Frankfurt","SC Freiburg","final",2,2),
+M("2026-09-19","22:30","Borussia Monchengladbach","FSV Mainz","final",3,4),
+M("2026-09-19","22:30","Hamburger SV","1. FC Cologne","final",2,1),
+M("2026-09-19","22:30","Werder Bremen","FC Augsburg","final",3,2),
+M("2026-09-20","01:30","VfB Stuttgart","Borussia Dortmund","final",0,1),
+M("2026-09-20","22:30","Bayer Leverkusen","RB Leipzig","final",2,0),
+M("2026-09-21","00:30","Schalke 04","SV 07 Elversberg","final",0,0),
+M("2026-09-21","02:30","SC Paderborn 07","TSG Hoffenheim","final",3,1),
+M("2026-10-10","03:30","Borussia Dortmund","Werder Bremen","sched",null,null,70.7,16.3,13),
+M("2026-10-10","22:30","TSG Hoffenheim","Hamburger SV","sched",null,null,69.3,16.9,13.8),
+M("2026-10-10","22:30","FC Augsburg","Bayern Munich","sched",null,null,9.2,11.2,79.6),
+M("2026-10-10","22:30","FSV Mainz","Bayer Leverkusen","sched",null,null,33.4,24.7,41.9),
+M("2026-10-10","22:30","Union Berlin","SV 07 Elversberg","sched",null,null,41.8,25.6,32.6),
+M("2026-10-10","22:30","SC Paderborn 07","VfB Stuttgart","sched",null,null,19.3,20.4,60.3),
+M("2026-10-11","01:30","RB Leipzig","Eintracht Frankfurt","sched",null,null,62.2,19.3,18.5),
+M("2026-10-11","22:30","1. FC Cologne","Borussia Monchengladbach","sched",null,null,48.1,24.2,27.7),
+M("2026-10-12","00:30","SC Freiburg","Schalke 04","sched",null,null,58.9,22.5,18.6),
+M("2026-10-17","03:30","Eintracht Frankfurt","1. FC Cologne","sched",null,null,49.1,23.3,27.6)
+],
+standings:[["Borussia Dortmund",4,0,0,12],["Bayern Munich",3,0,1,10],["SC Freiburg",3,0,1,10],["FC Augsburg",2,1,1,7],["Bayer Leverkusen",2,1,1,7],["FSV Mainz",2,1,1,7],["SV 07 Elversberg",2,1,1,7],["Werder Bremen",2,1,1,7],["RB Leipzig",2,2,0,6],["Eintracht Frankfurt",1,1,2,5],["Schalke 04",1,1,2,5],["SC Paderborn 07",1,2,1,4],["1. FC Cologne",1,2,1,4],["TSG Hoffenheim",1,3,0,3],["VfB Stuttgart",1,3,0,3],["Hamburger SV",1,3,0,3],["Union Berlin",0,3,1,1],["Borussia Monchengladbach",0,4,0,0]]
+},
+ligue1:{label:"리그앙",
+matches:[
+M("2026-09-14","03:45","Stade Brest 29","Paris Saint-Germain","final",0,1),
+M("2026-09-19","03:45","AS Monaco","Racing Club De Lens","final",2,1),
+M("2026-09-20","00:15","Paris FC","Strasbourg Alsace","final",2,1),
+M("2026-09-20","03:45","Angers SCO","ESTAC Troyes","final",2,0),
+M("2026-09-20","03:45","Le Mans FC","FC Lorient","final",2,1),
+M("2026-09-20","03:45","Olympique Lyon","Stade Rennais FC","final",4,0),
+M("2026-09-20","03:45","Toulouse FC","Le Havre AC","final",3,2),
+M("2026-09-20","22:00","AJ Auxerre","Stade Brest 29","final",2,1),
+M("2026-09-21","00:15","OGC Nice","Lille OSC","final",2,1),
+M("2026-09-21","03:45","Olympique Marseille","Paris Saint-Germain","final",1,2),
+M("2026-10-10","03:45","Racing Club De Lens","Olympique Lyon","sched",null,null,43.7,25.3,31),
+M("2026-10-11","00:15","Lille OSC","Le Havre AC","sched",null,null,67.7,19.4,12.9),
+M("2026-10-11","03:45","Stade Brest 29","Angers SCO","sched",null,null,49.6,26,24.4),
+M("2026-10-11","03:45","FC Lorient","Paris FC","sched",null,null,31.1,27.5,41.4),
+M("2026-10-11","03:45","AS Monaco","Toulouse FC","sched",null,null,55,23.6,21.4),
+M("2026-10-11","03:45","Paris Saint-Germain","Le Mans FC","sched",null,null,87.5,8.1,4.4),
+M("2026-10-11","22:00","OGC Nice","Strasbourg Alsace","sched",null,null,42.4,26.8,30.8),
+M("2026-10-12","00:15","Stade Rennais FC","AJ Auxerre","sched",null,null,67.7,18.2,14.1),
+M("2026-10-12","03:45","ESTAC Troyes","Olympique Marseille","sched",null,null,26.3,24.8,48.9),
+M("2026-10-17","03:45","Le Mans FC","Toulouse FC","sched",null,null,28.4,26.1,45.5)
+],
+standings:[["AS Monaco",4,0,1,13],["Olympique Lyon",3,0,2,11],["Paris FC",3,0,2,11],["Lille OSC",3,1,1,10],["Stade Rennais FC",3,1,1,10],["Paris Saint-Germain",2,1,2,8],["Angers SCO",2,2,1,7],["Strasbourg Alsace",2,2,1,7],["Le Mans FC",1,1,3,6],["AJ Auxerre",2,3,0,6],["Stade Brest 29",1,2,2,5],["FC Lorient",1,2,2,5],["Toulouse FC",1,2,2,5],["OGC Nice",1,2,2,5],["Racing Club De Lens",1,3,1,4],["ESTAC Troyes",1,3,1,4],["Olympique Marseille",1,4,0,3],["Le Havre AC",0,3,2,2]]
+},
+ucl:{label:"챔피언스리그",
+matches:[
+M("2026-09-10","04:00","Liverpool FC","Atletico Madrid","final",2,1),
+M("2026-09-10","04:00","Paris Saint-Germain","SK Slovan Bratislava","final",6,1),
+M("2026-09-10","04:00","Sporting CP","Galatasaray Istanbul","final",3,1),
+M("2026-09-10","04:00","SSC Napoli","Arsenal FC","final",0,1),
+M("2026-09-11","01:45","Fenerbahce Istanbul","AS Roma","final",1,1),
+M("2026-09-11","01:45","PSV Eindhoven","FC Shakhtar Donetsk","final",1,1),
+M("2026-09-11","04:00","Como 1907","RB Leipzig","final",4,1),
+M("2026-09-11","04:00","Bayern Munich","Bodoe/Glimt","final",5,0),
+M("2026-09-11","04:00","Manchester United","Sabah Masazir","final",4,0),
+M("2026-09-11","04:00","Slavia Prague","Racing Club De Lens","final",2,3),
+M("2026-10-14","01:45","Racing Club De Lens","Sporting CP","sched",null,null,40.2,25.1,34.7),
+M("2026-10-14","01:45","Sabah Masazir","Slavia Prague","sched",null,null,27.2,25.2,47.6),
+M("2026-10-14","04:00","Arsenal FC","Lille OSC","sched",null,null,75.2,15.8,9),
+M("2026-10-14","04:00","Atletico Madrid","Manchester United","sched",null,null,42.7,24.6,32.7),
+M("2026-10-14","04:00","Inter Milano","Club Brugge","sched",null,null,76.2,15,8.8),
+M("2026-10-14","04:00","Galatasaray Istanbul","FC Barcelona","sched",null,null,11.6,14,74.4),
+M("2026-10-14","04:00","RB Leipzig","PSV Eindhoven","sched",null,null,47.1,23.5,29.4),
+M("2026-10-14","04:00","Viking FK","Bayern Munich","sched",null,null,4,7.1,88.9),
+M("2026-10-14","04:00","Villarreal CF","SSC Napoli","sched",null,null,41.8,26.5,31.7),
+M("2026-10-15","01:45","Feyenoord Rotterdam","Como 1907","sched",null,null,27.6,23.6,48.8)
+],
+standings:[["Paris Saint-Germain",1,0,0,3],["Bayern Munich",1,0,0,3],["FC Barcelona",1,0,0,3],["Manchester United",1,0,0,3],["Como 1907",1,0,0,3],["Sporting CP",1,0,0,3],["VfB Stuttgart",1,0,0,3],["Manchester City",1,0,0,3],["Aston Villa",1,0,0,3],["Racing Club De Lens",1,0,0,3],["Real Betis Seville",1,0,0,3],["Borussia Dortmund",1,0,0,3],["Liverpool FC",1,0,0,3],["Real Madrid",1,0,0,3],["Arsenal FC",1,0,0,3],["AEK Athens",1,0,0,3],["AS Roma",0,0,1,1],["FC Shakhtar Donetsk",0,0,1,1],["Fenerbahce Istanbul",0,0,1,1],["PSV Eindhoven",0,0,1,1],["Villarreal CF",0,1,0,0],["Club Brugge",0,1,0,0],["Lille OSC",0,1,0,0],["Slavia Prague",0,1,0,0],["Atletico Madrid",0,1,0,0],["Inter Milano",0,1,0,0],["LASK Linz",0,1,0,0],["SSC Napoli",0,1,0,0],["Galatasaray Istanbul",0,1,0,0],["Viking FK",0,1,0,0],["FC Porto",0,1,0,0],["RB Leipzig",0,1,0,0],["Feyenoord Rotterdam",0,1,0,0],["Sabah Masazir",0,1,0,0],["SK Slovan Bratislava",0,1,0,0],["Bodoe/Glimt",0,1,0,0]]
+}
+};
+
+let curLeague='epl', curSub='sched', curDate=null, fav=null;
+try{fav=localStorage.getItem('favTeam')||null;}catch(e){}
+
+function allTeams(){
+const set=new Map();
+Object.entries(LEAGUES).forEach(([lk,lg])=>{
+lg.standings.forEach(s=>{ if(!set.has(s[0])) set.set(s[0], lg.label); });
+});
+return set;
+}
+function favLeagueKey(){
+if(!fav) return null;
+for(const [lk,lg] of Object.entries(LEAGUES)){
+if(lg.standings.some(s=>s[0]===fav) || lg.matches.some(m=>m.h===fav||m.a===fav)) return lk;
+}
+return null;
+}
+
+function renderLgTabs(){
+const el=document.getElementById('lgTabs');
+el.innerHTML='';
+Object.entries(LEAGUES).forEach(([key,lg])=>{
+const b=document.createElement('button');
+b.className='lg-tab'+(key===curLeague?' active':'');
+b.textContent=lg.label;
+b.onclick=()=>{curLeague=key;curDate=null;render();};
+el.appendChild(b);
+});
+}
+
+document.querySelectorAll('.sub-tab').forEach(t=>{
+t.onclick=()=>{curSub=t.dataset.sub;document.querySelectorAll('.sub-tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');render();};
+});
+
+function teamRow(name,score,isWin,predSide){
+const d=document.createElement('div');
+d.className='trow'+(isWin?' win':'');
+const b=document.createElement('div');
+b.className='badge'; b.style.background=color(name); b.textContent=abbr(name);
+const nm=document.createElement('div');
+nm.className='tname'+(name===fav?' fav':'');
+nm.textContent=kr(name);
+nm.onclick=(e)=>{e.stopPropagation(); if(predSide!==undefined) predSide();};
+const sc=document.createElement('div');
+sc.className='tscore'; sc.textContent = score===null?'':score;
+d.appendChild(b); d.appendChild(nm); d.appendChild(sc);
+return d;
+}
+
+function buildDetail(m,box){
+box.innerHTML='';
+if(m.st==='sched'){
+const p=document.createElement('div');
+p.style.fontSize='13px';
+const winner = m.hp>m.ap ? kr(m.h) : kr(m.a);
+const pct = Math.max(m.hp,m.ap);
+p.innerHTML=`🔮 AI 예상: <b style="color:var(--accent)">${winner}</b> 승리 가능성이 더 높습니다 (홈 ${m.hp}% · 무 ${m.dp}% · 원정 ${m.ap}%)`;
+box.appendChild(p);
+return;
+}
+const det = m.det && DETAILS[m.det];
+if(!det){
+const p=document.createElement('div');
+p.className='empty-note';
+p.textContent='이 경기의 상세 기록(스탯/라인업)은 이번 스냅샷에 포함되어 있지 않습니다. 최종 스코어만 제공됩니다.';
+box.appendChild(p);
+return;
+}
+const sum=document.createElement('div');
+sum.className='sum'; sum.textContent=det.sum;
+box.appendChild(sum);
+
+function statRow(label,hv,av,suffix){
+const row=document.createElement('div'); row.className='statrow';
+const hvv=document.createElement('div'); hvv.className='v'; hvv.textContent=hv+(suffix||'');
+const lbl=document.createElement('div'); lbl.className='stat-label'; lbl.textContent=label;
+const bar=document.createElement('div'); bar.className='bar';
+const tot=(hv+av)||1;
+const a=document.createElement('div'); a.className='a'; a.style.width=(hv/tot*100)+'%';
+const b=document.createElement('div'); b.className='b'; b.style.width=(av/tot*100)+'%';
+bar.appendChild(a); bar.appendChild(b);
+const avv=document.createElement('div'); avv.className='v'; avv.textContent=av+(suffix||'');
+row.appendChild(hvv); row.appendChild(bar); row.appendChild(lbl); row.appendChild(document.createElement('div'));
+row.lastChild.remove();
+row.appendChild(avv);
+box.appendChild(row);
+}
+statRow('점유율',det.st.h.pos,det.st.a.pos,'%');
+statRow('슈팅',det.st.h.shots,det.st.a.shots);
+statRow('유효슈팅',det.st.h.sot,det.st.a.sot);
+statRow('코너킥',det.st.h.corn,det.st.a.corn);
+statRow('옐로카드',det.st.h.yc,det.st.a.yc);
+
+const lu=document.createElement('div'); lu.className='lineups';
+const c1=document.createElement('div'); c1.className='lu-col';
+c1.innerHTML=`<h4>${kr(m.h)} 라인업</h4><ul>`+det.lu.h.map(p=>`<li>${p.split('(')[0]}<span> ${p.match(/\((.*)\)/)[1]}</span></li>`).join('')+'</ul>';
+const c2=document.createElement('div'); c2.className='lu-col';
+c2.innerHTML=`<h4>${kr(m.a)} 라인업</h4><ul>`+det.lu.a.map(p=>`<li>${p.split('(')[0]}<span> ${p.match(/\((.*)\)/)[1]}</span></li>`).join('')+'</ul>';
+lu.appendChild(c1); lu.appendChild(c2);
+box.appendChild(lu);
+}
+
+function matchCard(m){
+const card=document.createElement('div'); card.className='match';
+const head=document.createElement('div'); head.className='match-head';
+const time=document.createElement('div'); time.className='time';
+time.innerHTML=`<b>${m.t}</b><span class="st${m.st==='final'?'':' '}">${m.st==='final'?'종료':'예정'}</span>`;
+const teams=document.createElement('div'); teams.className='teams';
+const hWin = m.st==='final' && m.hs>m.as;
+const aWin = m.st==='final' && m.as>m.hs;
+teams.appendChild(teamRow(m.h, m.st==='final'?m.hs:null, hWin));
+teams.appendChild(teamRow(m.a, m.st==='final'?m.as:null, aWin));
+head.appendChild(time); head.appendChild(teams);
+
+if(m.st==='sched'){
+const pr=document.createElement('div'); pr.className='pred';
+pr.innerHTML='승률<br>'+m.hp+'% / '+m.ap+'%';
+head.appendChild(pr);
+}
+card.appendChild(head);
+const detBox=document.createElement('div'); detBox.className='detail';
+card.appendChild(detBox);
+head.onclick=()=>{
+const open=detBox.classList.contains('open');
+document.querySelectorAll('.detail.open').forEach(d=>d.classList.remove('open'));
+if(!open){ buildDetail(m,detBox); detBox.classList.add('open'); }
+};
+return card;
+}
+
+function renderSchedule(){
+const main=document.getElementById('main'); main.innerHTML='';
+const lg=LEAGUES[curLeague];
+const dates=[...new Set(lg.matches.map(m=>m.d))].sort();
+if(!curDate || !dates.includes(curDate)){
+const today='2026-09-22';
+curDate = dates.find(d=>d>=today) || dates[dates.length-1];
+}
+// pinned favorite match
+if(fav && favLeagueKey()===curLeague){
+const favMatches = lg.matches.filter(m=>(m.h===fav||m.a===fav) && m.st==='sched').sort((a,b)=>a.d<b.d?-1:1);
+if(favMatches.length){
+const pin=document.createElement('div'); pin.className='pin-box';
+pin.innerHTML=`<div class="lbl">★ ${kr(fav)} 다음 경기</div>`;
+pin.appendChild(matchCard(favMatches[0]));
+main.appendChild(pin);
+}
+}
+const scroller=document.createElement('div'); scroller.className='date-scroller';
+dates.forEach(d=>{
+const lb=dlabel(d);
+const chip=document.createElement('div');
+chip.className='date-chip'+(d===curDate?' active':'');
+chip.innerHTML=`${lb.mmdd}<span class="dow">${lb.dow}</span>`;
+chip.onclick=()=>{curDate=d;render();};
+scroller.appendChild(chip);
+});
+main.appendChild(scroller);
+let dayMatches=lg.matches.filter(m=>m.d===curDate);
+dayMatches=dayMatches.slice().sort((a,b)=>{
+const af=fav&&(a.h===fav||a.a===fav), bf=fav&&(b.h===fav||b.a===fav);
+if(af&&!bf) return -1; if(bf&&!af) return 1;
+return a.t<b.t?-1:1;
+});
+if(!dayMatches.length){
+const e=document.createElement('div'); e.className='empty-note'; e.textContent='이 날짜에 예정된 경기가 없습니다.';
+main.appendChild(e);
+}
+dayMatches.forEach(m=> main.appendChild(matchCard(m)));
+}
+
+function renderStandings(){
+const main=document.getElementById('main'); main.innerHTML='';
+const lg=LEAGUES[curLeague];
+const table=document.createElement('table'); table.className='standings';
+table.innerHTML=`<tr><th>순위</th><th style="text-align:left">팀</th><th>승</th><th>무</th><th>패</th><th>승점</th></tr>`;
+lg.standings.forEach((s,i)=>{
+const [name,w,l,d,pts]=s;
+const tr=document.createElement('tr');
+if(name===fav) tr.className='fav-row';
+tr.innerHTML=`<td class="rank">${i+1}</td><td class="team"><span class="badge" style="background:${color(name)};width:20px;height:20px;flex:0 0 20px;font-size:8px">${abbr(name)}</span>${kr(name)}${name===fav?' ★':''}</td><td>${w}</td><td>${d}</td><td>${l}</td><td><b>${pts}</b></td>`;
+table.appendChild(tr);
+});
+main.appendChild(table);
+}
+
+function render(){
+renderLgTabs();
+if(curSub==='sched') renderSchedule(); else renderStandings();
+}
+
+// favorite team picker
+const favBtn=document.getElementById('favBtn'), ov=document.getElementById('pickerOv'), sel=document.getElementById('favSelect'), saveBtn=document.getElementById('favSave');
+function fillSelect(){
+sel.innerHTML='<option value="">선택 안 함</option>';
+Object.entries(LEAGUES).forEach(([lk,lg])=>{
+const grp=document.createElement('optgroup'); grp.label=lg.label;
+lg.standings.forEach(s=>{
+const opt=document.createElement('option'); opt.value=s[0]; opt.textContent=kr(s[0]);
+if(s[0]===fav) opt.selected=true;
+grp.appendChild(opt);
+});
+sel.appendChild(grp);
+});
+}
+favBtn.onclick=()=>{fillSelect(); ov.classList.add('open');};
+ov.onclick=(e)=>{if(e.target===ov) ov.classList.remove('open');};
+saveBtn.onclick=()=>{
+fav = sel.value || null;
+try{ if(fav) localStorage.setItem('favTeam',fav); else localStorage.removeItem('favTeam'); }catch(e){}
+ov.classList.remove('open');
+render();
+};
+
+render();
+</script>
+</body>
+</html>
